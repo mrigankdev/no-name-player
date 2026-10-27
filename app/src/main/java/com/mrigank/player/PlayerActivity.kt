@@ -157,6 +157,21 @@ class PlayerActivity : ComponentActivity() {
             }
         }
 
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            reason: Int
+        ) {
+            if (reason != Player.DISCONTINUITY_REASON_AUTO_TRANSITION &&
+                oldPosition.mediaItemIndex != newPosition.mediaItemIndex
+            ) {
+                val v = PlayQueue.videos.getOrNull(oldPosition.mediaItemIndex)
+                if (v != null && oldPosition.positionMs > 3000L) {
+                    prefs.setPosition(v.id, oldPosition.positionMs)
+                }
+            }
+        }
+
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 val p = player
@@ -216,6 +231,11 @@ class PlayerActivity : ComponentActivity() {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         pipMode = isInPictureInPictureMode
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveProgress()
     }
 
     override fun onStop() {
@@ -394,6 +414,7 @@ class PlayerActivity : ComponentActivity() {
     private fun saveProgress() {
         val p = player ?: return
         val v = PlayQueue.videos.getOrNull(p.currentMediaItemIndex) ?: return
+        LastPlayed.set(applicationContext, v.id)
         val d = p.duration
         val pos = p.currentPosition
         if (d != C.TIME_UNSET && d > 0L && pos >= d - 10_000L) {
@@ -725,7 +746,7 @@ class PlayerActivity : ComponentActivity() {
                 dur = if (d == C.TIME_UNSET || d < 0L) 0L else d
                 if (aPos >= 0L && bPos > aPos && pos >= bPos) p.seekTo(aPos)
                 n++
-                if (n % 20 == 0) saveProgress()
+                if (n % 8 == 0) saveProgress()
                 delay(250)
             }
         }
