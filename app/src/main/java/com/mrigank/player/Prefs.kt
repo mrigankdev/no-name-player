@@ -27,41 +27,49 @@ class Prefs(context: Context) {
     var subFolder by mutableStateOf<String?>(sp.getString("subFolder", null))
         private set
 
+    @JvmName("applyTheme")
     fun setTheme(v: String) {
         theme = v
         sp.edit().putString("theme", v).apply()
     }
 
+    @JvmName("applyPureBlack")
     fun setPureBlack(v: Boolean) {
         pureBlack = v
         sp.edit().putBoolean("pureBlack", v).apply()
     }
 
+    @JvmName("applyGrid")
     fun setGrid(v: Boolean) {
         grid = v
         sp.edit().putBoolean("grid", v).apply()
     }
 
+    @JvmName("applyRememberSub")
     fun setRememberSub(v: Boolean) {
         rememberSub = v
         sp.edit().putBoolean("rememberSub", v).apply()
     }
 
+    @JvmName("applyAutoPip")
     fun setAutoPip(v: Boolean) {
         autoPip = v
         sp.edit().putBoolean("autoPip", v).apply()
     }
 
+    @JvmName("applySkipShort")
     fun setSkipShort(v: Int) {
         skipShort = v
         sp.edit().putInt("skipShort", v).apply()
     }
 
+    @JvmName("applySkipLong")
     fun setSkipLong(v: Int) {
         skipLong = v
         sp.edit().putInt("skipLong", v).apply()
     }
 
+    @JvmName("applySubFolder")
     fun setSubFolder(v: String?) {
         subFolder = v
         sp.edit().putString("subFolder", v).apply()
