@@ -13,7 +13,7 @@ class Prefs(context: Context) {
     // ---------- Look ----------
     var mode by mutableStateOf(sp.getString("mode", "dark") ?: "dark")
         private set
-    var darkTheme by mutableStateOf(sp.getString("darkTheme", "Midnight") ?: "Midnight")
+    var darkTheme by mutableStateOf(sp.getString("darkTheme", "Shiro") ?: "Shiro")
         private set
     var lightTheme by mutableStateOf(sp.getString("lightTheme", "Cloud") ?: "Cloud")
         private set
