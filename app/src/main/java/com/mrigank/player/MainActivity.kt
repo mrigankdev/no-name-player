@@ -37,11 +37,13 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
 
     private val tick = mutableIntStateOf(0)
+    private var prefsRef: Prefs? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val prefs = Prefs(applicationContext)
+        prefsRef = prefs
         setContent {
             AppTheme(prefs) {
                 Root(prefs)
@@ -55,6 +57,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun play(list: List<Video>, index: Int) {
+        // With "Resume playback" off, start the chosen video from the beginning.
+        val p = prefsRef
+        val first = list.getOrNull(index)
+        if (p != null && first != null && !p.resumePlayback && p.position(first.id) > 0L) {
+            p.setPosition(first.id, 0L)
+        }
         PlayQueue.videos = list
         PlayQueue.index = index
         startActivity(Intent(this, PlayerActivity::class.java))
