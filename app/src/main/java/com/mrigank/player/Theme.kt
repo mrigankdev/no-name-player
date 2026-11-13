@@ -24,14 +24,14 @@ data class Pal(
     val light: Boolean
 )
 
-private fun darkPal(name: String, bg: Long, surface: Long, accent: Long) = Pal(
+private fun darkPal(name: String, bg: Long, surface: Long, accent: Long, onAccent: Long = 0xFF0B1220) = Pal(
     name = name,
     bg = Color(bg),
     surface = Color(surface),
     onBg = Color(0xFFF2F3F5),
     muted = Color(0xFF9AA0A6),
     accent = Color(accent),
-    onAccent = Color(0xFF0B1220),
+    onAccent = Color(onAccent),
     light = false
 )
 
@@ -47,6 +47,7 @@ private fun lightPal(name: String, bg: Long, surface: Long, accent: Long) = Pal(
 )
 
 val palettes: List<Pal> = listOf(
+    darkPal("Shiro", 0xFF101116, 0xFF1B1D25, 0xFF3985FF, 0xFFFFFFFF),
     darkPal("Graphite", 0xFF0B0B0C, 0xFF1A1A1D, 0xFFE8EAED),
     darkPal("Charcoal", 0xFF121212, 0xFF1F1F1F, 0xFFD4D7DC),
     darkPal("Slate", 0xFF0F141A, 0xFF1A222B, 0xFF9DB1C6),
