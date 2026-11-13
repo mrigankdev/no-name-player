@@ -1,5 +1,7 @@
 package com.mrigank.player
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +30,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun BottomBar(tab: String, onTab: (String) -> Unit) {
     val pal = LocalPal.current
-    Column(Modifier.fillMaxWidth().background(pal.surface)) {
+    Column(Modifier.fillMaxWidth().background(pal.bg)) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(pal.onBg.copy(alpha = 0.08f)))
         Row(
             Modifier
@@ -45,6 +48,12 @@ fun BottomBar(tab: String, onTab: (String) -> Unit) {
 @Composable
 private fun RowScope.BarItem(label: String, ic: Nic, on: Boolean, onClick: () -> Unit) {
     val pal = LocalPal.current
+    val pillColor by animateColorAsState(
+        if (on) pal.accent.copy(alpha = 0.22f) else pal.accent.copy(alpha = 0f),
+        tween(220),
+        label = "tabPill"
+    )
+    val tint by animateColorAsState(if (on) pal.onBg else pal.muted, tween(220), label = "tabTint")
     Column(
         Modifier
             .weight(1f)
@@ -56,16 +65,16 @@ private fun RowScope.BarItem(label: String, ic: Nic, on: Boolean, onClick: () ->
                 .width(64.dp)
                 .height(32.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(if (on) pal.accent.copy(alpha = 0.22f) else Color.Transparent),
+                .background(pillColor),
             contentAlignment = Alignment.Center
         ) {
-            Nglyph(ic, if (on) pal.onBg else pal.muted, 24.dp)
+            Nglyph(ic, tint, 24.dp)
         }
         Spacer(Modifier.height(4.dp))
         T(
             label,
             12,
-            if (on) pal.onBg else pal.muted,
+            tint,
             if (on) FontWeight.SemiBold else FontWeight.Medium
         )
     }
