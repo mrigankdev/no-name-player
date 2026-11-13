@@ -1,6 +1,7 @@
 package com.mrigank.player
 
 import android.app.Activity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -30,7 +31,7 @@ private fun darkPal(name: String, bg: Long, surface: Long, accent: Long) = Pal(
     onBg = Color(0xFFF2F3F5),
     muted = Color(0xFF9AA0A6),
     accent = Color(accent),
-    onAccent = Color(0xFF0E0F11),
+    onAccent = Color(0xFF0B1220),
     light = false
 )
 
@@ -61,16 +62,42 @@ val palettes: List<Pal> = listOf(
     lightPal("Lilac", 0xFFF2EFFA, 0xFFFFFFFF, 0xFF6B4FB3)
 )
 
+/** Accent colors the person can pick instead of the theme's own accent. */
+val accents: List<Long> = listOf(
+    0xFF4C8DF6,
+    0xFF6FD3A0,
+    0xFFB79CFF,
+    0xFFE8977A,
+    0xFFF2C14E,
+    0xFFEF6F8E
+)
+
 val LocalPal = staticCompositionLocalOf { palettes[0] }
 
 @Composable
 fun AppTheme(prefs: Prefs, content: @Composable () -> Unit) {
-    val base = palettes.firstOrNull { it.name == prefs.theme } ?: palettes[0]
-    val pal = if (prefs.pureBlack && !base.light) {
-        base.copy(bg = Color.Black, surface = Color(0xFF0B0B0B))
-    } else {
-        base
+    val system = isSystemInDarkTheme()
+    val useDark = when (prefs.mode) {
+        "light" -> false
+        "dark" -> true
+        else -> system
     }
+    val wanted = if (useDark) prefs.darkTheme else prefs.lightTheme
+    val fallback = if (useDark) palettes.first { !it.light } else palettes.first { it.light }
+    val base = palettes.firstOrNull { it.name == wanted && it.light == !useDark } ?: fallback
+
+    var pal = base
+    if (useDark && prefs.pureBlack) {
+        pal = pal.copy(bg = Color.Black, surface = Color(0xFF0B0B0B))
+    }
+    val ai = prefs.accentIdx
+    if (ai >= 0 && ai < accents.size) {
+        pal = pal.copy(
+            accent = Color(accents[ai]),
+            onAccent = if (pal.light) Color(0xFFFFFFFF) else Color(0xFF0B1220)
+        )
+    }
+
     val scheme = if (pal.light) {
         lightColorScheme(
             primary = pal.accent,
