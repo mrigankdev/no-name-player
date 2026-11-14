@@ -293,8 +293,8 @@ internal fun VideoItem(
                 .padding(start = 20.dp, end = 4.dp, top = 9.dp, bottom = 9.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box {
-                Thumb(v, Modifier.size(104.dp, 62.dp))
+            Box(Modifier.size(104.dp, 62.dp)) {
+                Thumb(v, Modifier.fillMaxSize())
                 if (frac > 0f) {
                     ProgressLine(
                         frac,
