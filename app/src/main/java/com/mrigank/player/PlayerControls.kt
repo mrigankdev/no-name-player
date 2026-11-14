@@ -13,10 +13,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -120,18 +129,12 @@ internal fun PlayerControls(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val shown = if (info.dragging) info.dragVal.toLong() else info.pos
                 T(fmt(shown), 12, Color.White)
-                Slider(
-                    value = (if (info.dragging) info.dragVal else info.pos.toFloat())
-                        .coerceIn(0f, max(info.dur, 1L).toFloat()),
-                    onValueChange = { c.drag(it) },
-                    onValueChangeFinished = { c.dragEnd() },
-                    valueRange = 0f..max(info.dur, 1L).toFloat(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White,
-                        inactiveTrackColor = Color(0x9EFFFFFF)
-                    ),
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                PlSeek(
+                    value = if (info.dragging) info.dragVal else info.pos.toFloat(),
+                    maxV = max(info.dur, 1L).toFloat(),
+                    onChange = { c.drag(it) },
+                    onEnd = { c.dragEnd() },
+                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
                 )
                 T("-" + fmt((info.dur - shown).coerceAtLeast(0L)), 12, Color.White)
             }
@@ -159,5 +162,62 @@ internal fun PlayerControls(
                 PlBlue("+${prefs.skipLong}") { c.skip(prefs.skipLong * 1000L) }
             }
         }
+    }
+}
+
+/** Thin Arc-style seek line with a small round handle. */
+@Composable
+internal fun PlSeek(
+    value: Float,
+    maxV: Float,
+    onChange: (Float) -> Unit,
+    onEnd: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var w by remember { mutableIntStateOf(1) }
+    val frac = (value / maxV).coerceIn(0f, 1f)
+    Box(
+        modifier
+            .height(36.dp)
+            .onSizeChanged { w = max(it.width, 1) }
+            .pointerInput(maxV) {
+                detectTapGestures { off ->
+                    onChange((off.x / size.width * maxV).coerceIn(0f, maxV))
+                    onEnd()
+                }
+            }
+            .pointerInput(maxV) {
+                detectHorizontalDragGestures(
+                    onDragStart = { off -> onChange((off.x / size.width * maxV).coerceIn(0f, maxV)) },
+                    onDragEnd = { onEnd() },
+                    onDragCancel = { onEnd() }
+                ) { change, _ ->
+                    change.consume()
+                    onChange((change.position.x / size.width * maxV).coerceIn(0f, maxV))
+                }
+            },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(Color(0x66FFFFFF))
+        )
+        Box(
+            Modifier
+                .fillMaxWidth(frac)
+                .height(3.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(Color.White)
+        )
+        Box(
+            Modifier
+                .offset { IntOffset((w * frac - 6.dp.toPx()).toInt(), 0) }
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(Color.White)
+        )
     }
 }
