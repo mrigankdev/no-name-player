@@ -222,9 +222,9 @@ internal fun PlSkip(forward: Boolean, secs: Int, onClick: () -> Unit) {
 internal fun PlBlue(label: String, onClick: () -> Unit) {
     Box(
         Modifier
-            .size(46.dp)
+            .size(42.dp)
             .clip(CircleShape)
-            .background(LocalPal.current.accent.copy(alpha = 0.34f))
+            .background(LocalPal.current.accent.copy(alpha = 0.45f))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
