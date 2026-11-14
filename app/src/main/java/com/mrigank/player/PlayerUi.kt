@@ -53,6 +53,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import kotlin.math.abs
 import kotlin.math.max
@@ -190,12 +191,23 @@ internal fun PlayerUi(p: ExoPlayer, prefs: Prefs, fx: AudioFx, pipMode: Boolean,
                 v.useController = false
                 v.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                 v.player = p
+                v.subtitleView?.setApplyEmbeddedStyles(false)
+                v.subtitleView?.setStyle(
+                    CaptionStyleCompat(
+                        android.graphics.Color.WHITE,
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT,
+                        CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+                        android.graphics.Color.BLACK,
+                        null
+                    )
+                )
                 v
             },
             update = { v ->
                 v.player = p
                 v.resizeMode = resize
-                v.subtitleView?.setBottomPaddingFraction(if (controls && !locked) 0.22f else 0.06f)
+                v.subtitleView?.setBottomPaddingFraction(if (controls && !locked) 0.34f else 0.06f)
             },
             modifier = Modifier
                 .fillMaxSize()
