@@ -160,6 +160,30 @@ internal fun Tick(on: Boolean) {
 
 // ---------- Rows ----------
 
+/** Folder picture: four small pictures in a 2 x 2 block, like VLC. */
+@Composable
+internal fun Mosaic(videos: List<Video>, modifier: Modifier = Modifier) {
+    val pal = LocalPal.current
+    val list = videos.take(4)
+    if (list.size < 4) {
+        Thumb(list.first(), modifier)
+    } else {
+        Column(modifier.clip(RoundedCornerShape(8.dp)).background(pal.bg)) {
+            Row(Modifier.weight(1f).fillMaxWidth()) {
+                Thumb(list[0], Modifier.weight(1f).fillMaxHeight())
+                Spacer(Modifier.width(2.dp))
+                Thumb(list[1], Modifier.weight(1f).fillMaxHeight())
+            }
+            Spacer(Modifier.height(2.dp))
+            Row(Modifier.weight(1f).fillMaxWidth()) {
+                Thumb(list[2], Modifier.weight(1f).fillMaxHeight())
+                Spacer(Modifier.width(2.dp))
+                Thumb(list[3], Modifier.weight(1f).fillMaxHeight())
+            }
+        }
+    }
+}
+
 @Composable
 internal fun GroupItem(
     g: Group,
@@ -170,12 +194,8 @@ internal fun GroupItem(
     onClick: () -> Unit
 ) {
     val pal = LocalPal.current
-    val rev = prefs.rev
-    val done = remember(rev, g) { Grouping.watchedCount(g, prefs) }
     val total = g.videos.size
-    val frac = if (total == 0) 0f else done.toFloat() / total
     val titleColor = if (isLast) pal.accent else pal.onBg
-    val first = g.videos.first()
 
     if (grid) {
         Column(
@@ -184,36 +204,30 @@ internal fun GroupItem(
                 .clip(RoundedCornerShape(10.dp))
                 .clickable(onClick = onClick)
         ) {
-            Thumb(first, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
+            Mosaic(g.videos, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
-                    T(g.name, 14, titleColor, FontWeight.Medium, 2)
-                    T(countText(total), 12, pal.muted)
-                    T("$done of $total watched", 12, pal.muted)
+                    T(g.name, 15, titleColor, FontWeight.Normal, 2)
+                    T(countText(total), 13, pal.muted)
                 }
                 GroupMenu(g, actions)
             }
-            Spacer(Modifier.height(4.dp))
-            ProgressLine(frac)
         }
     } else {
         Row(
             Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
-                .padding(start = 20.dp, end = 4.dp, top = 9.dp, bottom = 9.dp),
+                .padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Thumb(first, Modifier.size(104.dp, 62.dp))
-            Spacer(Modifier.width(14.dp))
+            Mosaic(g.videos, Modifier.size(96.dp, 60.dp))
+            Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                T(g.name, 15, titleColor, FontWeight.Medium, 2)
+                T(g.name, 17, titleColor, FontWeight.Normal, 2)
                 Spacer(Modifier.height(2.dp))
-                T(countText(total), 12, pal.muted)
-                T("$done of $total watched", 12, pal.muted)
-                Spacer(Modifier.height(5.dp))
-                ProgressLine(frac)
+                T(countText(total), 14, pal.muted)
             }
             GroupMenu(g, actions)
         }
@@ -240,7 +254,8 @@ internal fun VideoItem(
         else -> 0f
     }
     val picked = sel.ids.contains(v.id)
-    val meta = fmt(v.durationMs) + " · " + sizeText(v.size) + if (watched) " · Watched" else ""
+    val meta = fmt(v.durationMs) + if (sel.active) " · " + sizeText(v.size) else ""
+    val titleColor = if (watched) pal.muted else pal.onBg
     val bg = if (picked) pal.accent.copy(alpha = 0.14f) else Color.Transparent
 
     if (grid) {
@@ -258,7 +273,7 @@ internal fun VideoItem(
         ) {
             Box {
                 Thumb(v, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
-                if (frac > 0f) {
+                if (!watched && frac > 0f) {
                     ProgressLine(
                         frac,
                         Modifier
@@ -273,8 +288,8 @@ internal fun VideoItem(
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
-                    T(v.name, 14, pal.onBg, FontWeight.Medium, 2)
-                    T(meta, 12, pal.muted)
+                    T(v.name, 15, titleColor, FontWeight.Normal, 2)
+                    T(meta, 13, pal.muted)
                 }
                 if (!sel.active) VideoMenu(v, prefs, actions)
             }
@@ -290,12 +305,12 @@ internal fun VideoItem(
                     },
                     onLongClick = { sel.toggle(v.id) }
                 )
-                .padding(start = 20.dp, end = 4.dp, top = 9.dp, bottom = 9.dp),
+                .padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(Modifier.size(104.dp, 62.dp)) {
+            Box(Modifier.size(96.dp, 60.dp)) {
                 Thumb(v, Modifier.fillMaxSize())
-                if (frac > 0f) {
+                if (!watched && frac > 0f) {
                     ProgressLine(
                         frac,
                         Modifier
@@ -304,11 +319,11 @@ internal fun VideoItem(
                     )
                 }
             }
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                T(v.name, 15, pal.onBg, FontWeight.Medium, 2)
-                Spacer(Modifier.height(3.dp))
-                T(meta, 12, pal.muted)
+                T(v.name, 17, titleColor, FontWeight.Normal, 2)
+                Spacer(Modifier.height(2.dp))
+                T(meta, 14, pal.muted)
             }
             if (sel.active) {
                 Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) { Tick(picked) }
