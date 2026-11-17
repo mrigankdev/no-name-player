@@ -1,5 +1,7 @@
 package com.mrigank.player
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -46,6 +48,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -71,7 +74,7 @@ fun HomeScreen(
     var searching by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var showSort by remember { mutableStateOf(false) }
-    var modeMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val rev = prefs.rev
 
     BackHandler(enabled = sel.active || searching) {
@@ -110,9 +113,16 @@ fun HomeScreen(
                     .padding(start = 24.dp, end = 4.dp, top = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                T("Shiro ", 26, pal.onBg, FontWeight.Bold)
-                T("Player", 26, pal.accent, FontWeight.Bold)
+                T("Shiro ", 24, pal.onBg, FontWeight.Bold)
+                T("Player", 24, pal.accent, FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
+                HomeIcon(PlIc.Cast, pal.onBg) {
+                    try {
+                        context.startActivity(Intent(Settings.ACTION_CAST_SETTINGS))
+                    } catch (e: Exception) {
+                        // no cast screen on this phone
+                    }
+                }
                 IconBtn(Ic.Search, pal.onBg, { searching = true })
                 DotsMenu { close ->
                     DropdownMenuItem(
@@ -126,50 +136,30 @@ fun HomeScreen(
             }
         }
 
+        if (!sel.active && !searching) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, top = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Chip("Grouped", prefs.view != "all") { prefs.changeView("grouped") }
+                Chip("All videos", prefs.view == "all") { prefs.changeView("all") }
+                val recent = prefs.sortKey == "date" && !prefs.sortAsc
+                Chip("Recent", recent) {
+                    if (recent) prefs.changeSort("name", true) else prefs.changeSort("date", false)
+                }
+            }
+        }
+
         if (!sel.active) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 12.dp, top = 22.dp, bottom = 6.dp),
+                    .padding(start = 24.dp, end = 12.dp, top = 14.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box {
-                    Row(
-                        Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { modeMenu = true }
-                            .padding(vertical = 6.dp, horizontal = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        T(
-                            if (prefs.view == "all") "All videos" else "Grouped",
-                            15,
-                            pal.onBg,
-                            FontWeight.SemiBold
-                        )
-                        Nglyph(Nic.Down, pal.onBg, 20.dp)
-                    }
-                    DropdownMenu(
-                        expanded = modeMenu,
-                        onDismissRequest = { modeMenu = false },
-                        modifier = Modifier.background(pal.surface)
-                    ) {
-                        DropdownMenuItem(
-                            text = { T("Grouped", 15, pal.onBg) },
-                            onClick = {
-                                modeMenu = false
-                                prefs.changeView("grouped")
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { T("All videos", 15, pal.onBg) },
-                            onClick = {
-                                modeMenu = false
-                                prefs.changeView("all")
-                            }
-                        )
-                    }
-                }
+                T(if (prefs.view == "all") "All videos" else "All folders", 14, pal.muted)
                 Spacer(Modifier.weight(1f))
                 if (prefs.grid) {
                     IconBtn(Ic.List, pal.muted, { prefs.changeGrid(false) })
@@ -303,11 +293,7 @@ fun GroupScreen(group: Group, prefs: Prefs, actions: Actions, onBack: () -> Unit
                 GroupMenu(group, actions)
             }
             Column(Modifier.padding(start = 24.dp, top = 4.dp, bottom = 10.dp)) {
-                T(
-                    countText(group.videos.size) + " · " + done + " of " + group.videos.size + " watched",
-                    13,
-                    pal.muted
-                )
+                T(countText(group.videos.size), 14, pal.muted)
             }
         }
         LazyColumn(
@@ -320,5 +306,18 @@ fun GroupScreen(group: Group, prefs: Prefs, actions: Actions, onBack: () -> Unit
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HomeIcon(ic: PlIc, tint: Color, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        PlGlyph(ic, tint, 22.dp)
     }
 }
