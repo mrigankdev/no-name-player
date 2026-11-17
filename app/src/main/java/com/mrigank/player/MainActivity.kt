@@ -46,7 +46,9 @@ class MainActivity : ComponentActivity() {
         prefsRef = prefs
         setContent {
             AppTheme(prefs) {
-                Root(prefs)
+                ShiroSplashHost {
+                    Root(prefs)
+                }
             }
         }
     }
